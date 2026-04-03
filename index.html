@@ -1,0 +1,576 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no"/>
+<title>Wise AI</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=Lora:ital,wght@0,400;0,500;1,400&display=swap" rel="stylesheet"/>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+:root{
+  --bg:#000;--surface:#111;--surface2:#181818;--border:#222;
+  --accent:#c8a96e;--accent2:#a07840;--muted:#555;
+  --font-d:'Playfair Display',Georgia,serif;
+  --font-b:'Lora',Georgia,serif;
+  --sb:env(safe-area-inset-bottom,0px);
+}
+html,body{width:100%;height:100%;background:#000;overflow:hidden;font-family:var(--font-b);}
+
+/* ── KEY SCREEN ── */
+#KS{position:fixed;inset:0;z-index:9999;background:#000;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:28px 22px;}
+#KS.off{display:none;}
+.ks-logo{font-family:var(--font-d);font-size:42px;font-weight:700;color:#fff;text-align:center;}
+.ks-logo em{color:var(--accent);font-style:normal;}
+.ks-tag{font-size:13px;color:var(--muted);font-style:italic;margin:6px 0 32px;text-align:center;}
+.ks-box{background:var(--surface);border:1px solid var(--border);border-radius:22px;padding:24px 18px;width:100%;max-width:400px;}
+.ks-lbl{font-size:11px;color:#777;text-transform:uppercase;letter-spacing:.7px;margin-bottom:8px;}
+.ks-note{font-size:12.5px;color:#666;line-height:1.7;margin-bottom:14px;}
+.ks-note a{color:var(--accent);text-decoration:none;}
+#ki{width:100%;background:#0a0a0a;border:1px solid var(--border);border-radius:13px;padding:14px;color:#fff;font-size:14px;font-family:monospace;outline:none;letter-spacing:.3px;transition:border-color .2s;}
+#ki:focus{border-color:var(--accent);}
+#ki::placeholder{color:#444;font-family:var(--font-b);letter-spacing:0;}
+#ke{color:#d44;font-size:12.5px;margin-top:8px;min-height:18px;}
+#kb{width:100%;margin-top:16px;background:var(--accent);color:#000;border:none;border-radius:14px;padding:15px;font-size:15px;font-weight:700;font-family:var(--font-d);cursor:pointer;transition:.15s;}
+#kb:active{background:var(--accent2);}
+.ks-foot{margin-top:12px;font-size:11px;color:#333;text-align:center;line-height:1.8;}
+
+/* ── TOP BAR ── */
+#TB{position:fixed;top:0;left:0;width:100%;z-index:500;display:none;align-items:center;justify-content:space-between;padding:14px 18px 10px;background:linear-gradient(180deg,#000 60%,transparent);}
+#TB.on{display:flex;}
+#TBlogo{font-family:var(--font-d);font-size:22px;font-weight:700;color:#fff;cursor:pointer;user-select:none;}
+#TBlogo em{color:var(--accent);font-style:normal;}
+#TBdot{width:9px;height:9px;border-radius:50%;background:#3ddc84;box-shadow:0 0 8px #3ddc84;}
+#TBnew{background:none;border:1px solid var(--border);border-radius:20px;padding:5px 12px;color:#888;font-size:12px;font-family:var(--font-b);cursor:pointer;}
+#TBnew:active{color:#fff;border-color:#555;}
+
+/* ── APP ── */
+#APP{display:none;flex-direction:column;height:100vh;height:100dvh;}
+#APP.on{display:flex;}
+#CA{flex:1;overflow-y:auto;overflow-x:hidden;padding:66px 0 0;scroll-behavior:smooth;}
+#CA::-webkit-scrollbar{display:none;}
+
+/* ── WELCOME ── */
+#WEL{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:calc(100dvh - 130px);padding:24px 18px;}
+#WEL h1{font-family:var(--font-d);font-size:38px;font-weight:700;color:#fff;text-align:center;line-height:1.2;margin-bottom:6px;}
+#WEL h1 em{color:var(--accent);font-style:normal;}
+#WEL p{font-size:14px;color:var(--muted);text-align:center;margin-bottom:36px;font-style:italic;}
+#SUGS{display:grid;grid-template-columns:1fr 1fr;gap:10px;width:100%;max-width:400px;}
+.sg{background:var(--surface);border:1px solid var(--border);border-radius:18px;padding:15px 13px;cursor:pointer;transition:.18s;}
+.sg:active{border-color:var(--accent2);transform:scale(.96);}
+.sg-i{font-size:22px;margin-bottom:7px;}
+.sg-t{font-size:12.5px;color:#999;line-height:1.45;}
+
+/* ── MESSAGES ── */
+#MSG{padding:4px 0 8px;}
+.row{display:flex;padding:5px 14px;animation:fu .25s ease;}
+.row.u{justify-content:flex-end;}
+.row.a{justify-content:flex-start;}
+@keyframes fu{from{opacity:0;transform:translateY(8px);}to{opacity:1;transform:none;}}
+
+/* USER bubble */
+.bu{background:#fff;color:#000;border-radius:22px 22px 4px 22px;padding:13px 16px;max-width:80%;font-size:15px;line-height:1.55;font-family:var(--font-b);word-break:break-word;}
+
+/* AI doc */
+.ba{background:transparent;color:#ddd;padding:14px 18px 8px;width:100%;font-size:15.5px;line-height:1.8;font-family:var(--font-b);border-left:2px solid #1a1a1a;margin-left:2px;word-break:break-word;}
+.ba h1{font-family:var(--font-d);font-size:26px;color:#fff;margin:16px 0 8px;}
+.ba h2{font-family:var(--font-d);font-size:21px;color:#fff;margin:14px 0 7px;}
+.ba h3{font-family:var(--font-d);font-size:17px;color:var(--accent);margin:12px 0 6px;}
+.ba p{margin-bottom:11px;}
+.ba strong{color:#fff;font-weight:600;}
+.ba em{color:var(--accent);font-style:italic;}
+.ba ul,.ba ol{padding-left:20px;margin:6px 0 12px;}
+.ba li{margin-bottom:5px;}
+.ba code{background:#181818;border-radius:5px;padding:2px 7px;font-size:13px;font-family:monospace;color:var(--accent);}
+.ba pre{background:#181818;border-radius:12px;padding:14px;overflow-x:auto;margin:10px 0;}
+.ba blockquote{border-left:3px solid var(--accent);padding-left:14px;margin:10px 0;color:#888;font-style:italic;}
+.ba hr{border:none;border-top:1px solid var(--border);margin:14px 0;}
+.kw{color:var(--accent);font-weight:600;}
+
+/* ── BIRD TYPING ── */
+#TR{display:none;padding:10px 18px 6px;align-items:center;gap:12px;}
+#TR.on{display:flex;}
+#BSV{transition:none;}
+#BSV.fly{animation:bf .65s ease-in forwards;}
+@keyframes bf{0%{transform:translate(0,0) scale(1);opacity:1;}50%{transform:translate(40px,-22px) scale(.75);}100%{transform:translate(130px,-65px) scale(.3);opacity:0;}}
+.dots{display:flex;gap:5px;align-items:center;}
+.dots span{width:6px;height:6px;border-radius:50%;background:var(--muted);animation:dt .9s ease-in-out infinite;}
+.dots span:nth-child(2){animation-delay:.2s;}
+.dots span:nth-child(3){animation-delay:.4s;}
+@keyframes dt{0%,80%,100%{transform:scale(.6);opacity:.35;}40%{transform:scale(1);opacity:1;}}
+
+/* ── MEMORY STRIP ── */
+#MEM{padding:5px 14px 2px;display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;}
+#MEM::-webkit-scrollbar{display:none;}
+.mc{flex-shrink:0;background:var(--surface);border:1px solid var(--border);border-radius:20px;padding:4px 11px;font-size:11px;color:#666;white-space:nowrap;}
+.mc b{color:var(--accent);font-weight:500;}
+
+/* ── INPUT ── */
+#IB{padding:10px 14px calc(10px + var(--sb));background:linear-gradient(0deg,#000 70%,transparent);display:flex;align-items:flex-end;gap:10px;}
+#IW{flex:1;background:var(--surface);border:1px solid var(--border);border-radius:24px;display:flex;align-items:flex-end;padding:10px 14px;transition:border-color .2s;}
+#IW:focus-within{border-color:var(--accent2);}
+#TI{flex:1;background:none;border:none;outline:none;color:#fff;font-size:15px;font-family:var(--font-b);resize:none;max-height:120px;line-height:1.5;caret-color:var(--accent);}
+#TI::placeholder{color:var(--muted);}
+#SB{width:44px;height:44px;border-radius:50%;background:var(--accent);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;box-shadow:0 2px 14px rgba(200,169,110,.22);transition:.15s;}
+#SB:active{transform:scale(.9);background:var(--accent2);}
+#SB svg{width:18px;height:18px;fill:none;stroke:#000;stroke-width:2.3;stroke-linecap:round;stroke-linejoin:round;}
+
+/* ── ADMIN ── */
+#AO{display:none;position:fixed;inset:0;background:rgba(0,0,0,.94);z-index:800;padding:22px 16px;overflow-y:auto;}
+#AO.on{display:block;}
+#AP{background:var(--surface);border:1px solid var(--border);border-radius:22px;padding:22px;max-width:460px;margin:auto;}
+.at{font-family:var(--font-d);font-size:21px;color:var(--accent);margin-bottom:4px;}
+.as{font-size:12px;color:var(--muted);margin-bottom:20px;}
+.as2{margin-bottom:18px;}
+.al{font-size:11px;color:#777;text-transform:uppercase;letter-spacing:.6px;margin-bottom:7px;}
+.ai{width:100%;background:#0a0a0a;border:1px solid var(--border);border-radius:12px;padding:11px 13px;color:#fff;font-size:14px;font-family:var(--font-b);outline:none;resize:vertical;min-height:70px;}
+.ai:focus,.ak:focus{border-color:var(--accent2);}
+.ak{width:100%;background:#0a0a0a;border:1px solid var(--border);border-radius:12px;padding:11px 13px;color:#fff;font-size:13px;font-family:monospace;outline:none;letter-spacing:.3px;}
+.ar{display:flex;align-items:center;gap:12px;}
+.ar input[type=range]{flex:1;accent-color:var(--accent);}
+.ar span{color:var(--accent);font-size:13px;min-width:36px;text-align:right;}
+.arow{display:flex;gap:10px;margin-top:20px;}
+.abtn{flex:1;background:var(--accent);color:#000;border:none;border-radius:12px;padding:13px;font-size:14px;font-weight:700;cursor:pointer;font-family:var(--font-d);}
+.abtn:active{background:var(--accent2);}
+.axbtn{width:46px;background:var(--surface2);border:1px solid var(--border);border-radius:12px;color:#777;cursor:pointer;font-size:18px;}
+.adng{width:100%;background:transparent;border:1px solid #400;border-radius:12px;padding:11px;color:#c44;font-size:13px;font-family:var(--font-b);cursor:pointer;}
+</style>
+</head>
+<body>
+
+<!-- KEY SCREEN -->
+<div id="KS">
+  <div class="ks-logo"><em>Wise</em> AI</div>
+  <div class="ks-tag">Your calm. Your clarity. Your companion.</div>
+  <div class="ks-box">
+    <div class="ks-lbl">Groq API Key</div>
+    <div class="ks-note">
+      Free key at <a href="https://console.groq.com" target="_blank">console.groq.com</a> →
+      Sign in → API Keys → Create key.<br/>
+      Saved only on your device. Never shared.
+    </div>
+    <input id="ki" type="password" placeholder="Paste your key here  (gsk_…)" autocomplete="off" spellcheck="false"/>
+    <div id="ke"></div>
+    <button id="kb" onclick="doSaveKey()">Connect &amp; Start →</button>
+    <div class="ks-foot">🔒 Stored on device only · Private &amp; secure</div>
+  </div>
+</div>
+
+<!-- TOP BAR -->
+<div id="TB">
+  <div id="TBlogo"><em>Wise</em> AI</div>
+  <div style="display:flex;align-items:center;gap:10px;">
+    <button id="TBnew" onclick="newChat()">+ New</button>
+    <div id="TBdot"></div>
+  </div>
+</div>
+
+<!-- APP -->
+<div id="APP">
+  <div id="CA">
+    <div id="MEM"></div>
+    <div id="WEL">
+      <h1>Hello, I'm <em>Wise</em></h1>
+      <p>Here for you — always. What's on your mind?</p>
+      <div id="SUGS">
+        <div class="sg" onclick="sg(this)"><div class="sg-i">🧠</div><div class="sg-t">Help me think through something hard</div></div>
+        <div class="sg" onclick="sg(this)"><div class="sg-i">💙</div><div class="sg-t">I need to talk to someone right now</div></div>
+        <div class="sg" onclick="sg(this)"><div class="sg-i">🌙</div><div class="sg-t">I can't sleep, too much on my mind</div></div>
+        <div class="sg" onclick="sg(this)"><div class="sg-i">✨</div><div class="sg-t">Explain something complex, simply</div></div>
+      </div>
+    </div>
+    <div id="MSG"></div>
+    <div id="TR">
+      <svg id="BSV" viewBox="0 0 36 28" width="34" height="26">
+        <ellipse cx="18" cy="17" rx="7" ry="4.5" fill="#c8a96e"/>
+        <circle cx="24.5" cy="13" r="3.5" fill="#c8a96e"/>
+        <polygon points="27.5,13 30.5,12 27.5,14.5" fill="#e8b860"/>
+        <circle cx="25.5" cy="12.5" r=".8" fill="#000"/>
+        <polygon points="11,17 7,14 7,20" fill="#a07840"/>
+        <ellipse cx="17" cy="13.5" rx="6" ry="2.5" fill="#a07840" transform-origin="17 17">
+          <animateTransform attributeName="transform" type="rotate" values="0 17 17;-25 17 17;0 17 17" dur=".6s" repeatCount="indefinite"/>
+        </ellipse>
+      </svg>
+      <div class="dots"><span></span><span></span><span></span></div>
+    </div>
+  </div>
+  <div id="IB">
+    <div id="IW">
+      <textarea id="TI" rows="1" placeholder="Say anything…" maxlength="4000"></textarea>
+    </div>
+    <button id="SB" onclick="send()">
+      <svg viewBox="0 0 24 24"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+    </button>
+  </div>
+</div>
+
+<!-- ADMIN -->
+<div id="AO">
+  <div id="AP">
+    <div class="at">⚙️ Settings</div>
+    <div class="as">Everything saves permanently.</div>
+    <div class="as2">
+      <div class="al">Groq API Key</div>
+      <input class="ak" id="AK" type="password" placeholder="gsk_…" autocomplete="off" spellcheck="false"/>
+    </div>
+    <div class="as2">
+      <div class="al">Personality Prompt</div>
+      <textarea class="ai" id="ASY" rows="5"></textarea>
+    </div>
+    <div class="as2">
+      <div class="al">Temperature</div>
+      <div class="ar">
+        <input type="range" id="AT" min="0" max="10" step="1" value="7" oninput="document.getElementById('ATV').textContent=(this.value/10).toFixed(1)"/>
+        <span id="ATV">0.7</span>
+      </div>
+    </div>
+    <div class="as2">
+      <div class="al">Max Tokens</div>
+      <div class="ar">
+        <input type="range" id="ATK" min="256" max="4096" step="256" value="1024" oninput="document.getElementById('ATKV').textContent=this.value"/>
+        <span id="ATKV">1024</span>
+      </div>
+    </div>
+    <div class="as2">
+      <div class="al">Model</div>
+      <select class="ai" id="AMD" style="min-height:auto;resize:none;cursor:pointer;">
+        <option value="llama-3.3-70b-versatile">Llama 3.3 70B — Best ⚡</option>
+        <option value="llama-3.1-8b-instant">Llama 3.1 8B — Fastest 🚀</option>
+        <option value="llama3-8b-8192">Llama 3 8B 🧠</option>
+        <option value="gemma2-9b-it">Gemma 2 9B 🌀</option>
+      </select>
+    </div>
+    <div class="as2">
+      <button class="adng" onclick="clearAll()">🗑 Clear All History &amp; Memory</button>
+    </div>
+    <div class="arow">
+      <button class="abtn" id="ASVB" onclick="saveAdmin()">Save Everything</button>
+      <button class="axbtn" onclick="closeAdmin()">✕</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ─────────────────────────────────────────
+// STORAGE  (prefix W_ to avoid old conflicts)
+// ─────────────────────────────────────────
+const PFX = 'W_';
+function sv(k,v){try{localStorage.setItem(PFX+k,JSON.stringify(v));}catch(e){}}
+function ld(k,d){try{const x=localStorage.getItem(PFX+k);return x!==null?JSON.parse(x):d;}catch(e){return d;}}
+
+const GROQ='https://api.groq.com/openai/v1/chat/completions';
+const DEF_MODEL='llama-3.3-70b-versatile';
+const DEF_SYS=`You are Wise — a calm, deeply human presence. Not an AI, not a bot. A trusted friend with real wisdom and warmth.
+
+RULES:
+- NEVER say "I'm an AI" or "As a language model". You are Wise.
+- Read emotion in every message. Feel before you respond.
+- Match energy — sad = slow, warm, gentle. Excited = warm, energetic.
+- Make people feel HEARD first. Help second.
+- Use real-life examples. Break complex things into the clearest language possible.
+- Use spacing, emojis where natural, bold for key points.
+- If someone is struggling — hold space. Don't rush to fix.
+- Created by Henry.`;
+
+let hist=[], mem={}, busy=false, taps=0, tapT=null;
+
+// ─────────────────────────────────────────
+// BOOT
+// ─────────────────────────────────────────
+(function boot(){
+  const key=ld('key','');
+  if(!key){showKS();return;}
+  launchApp();
+})();
+
+function showKS(){
+  document.getElementById('KS').classList.remove('off');
+  document.getElementById('TB').classList.remove('on');
+  document.getElementById('APP').classList.remove('on');
+}
+
+function launchApp(){
+  document.getElementById('KS').classList.add('off');
+  document.getElementById('TB').classList.add('on');
+  document.getElementById('APP').classList.add('on');
+  hist=ld('hist',[]);
+  mem=ld('mem',{});
+  loadAdmin();
+  renderMem();
+  if(hist.length){
+    document.getElementById('WEL').style.display='none';
+    hist.forEach(m=>{
+      if(m.role==='user') bubble(m.content,'u',false);
+      else if(m.role==='assistant') bubble(m.content,'a',false);
+    });
+    scrollEnd();
+  }
+}
+
+// ─────────────────────────────────────────
+// KEY SCREEN
+// ─────────────────────────────────────────
+function doSaveKey(){
+  const ki=document.getElementById('ki');
+  const ke=document.getElementById('ke');
+  const kb=document.getElementById('kb');
+  const key=ki.value.trim();
+  if(!key){ke.textContent='Please paste your Groq API key.';return;}
+  if(!key.startsWith('gsk_')){ke.textContent='Groq keys start with gsk_ — check and try again.';return;}
+  ke.textContent='';kb.textContent='Checking…';kb.disabled=true;
+  fetch(GROQ,{
+    method:'POST',
+    headers:{'Content-Type':'application/json','Authorization':'Bearer '+key},
+    body:JSON.stringify({model:'llama-3.1-8b-instant',messages:[{role:'user',content:'hi'}],max_tokens:3})
+  })
+  .then(r=>r.json())
+  .then(d=>{
+    if(d.error){
+      ke.textContent='❌ '+d.error.message;
+      kb.textContent='Connect & Start →';kb.disabled=false;
+    } else {
+      sv('key',key);
+      kb.textContent='✓ Connected!';
+      setTimeout(launchApp,500);
+    }
+  })
+  .catch(()=>{
+    ke.textContent='Network error — check connection and try again.';
+    kb.textContent='Connect & Start →';kb.disabled=false;
+  });
+}
+document.getElementById('ki').addEventListener('keydown',e=>{if(e.key==='Enter')doSaveKey();});
+
+// ─────────────────────────────────────────
+// LOGO 5-TAP → ADMIN
+// ─────────────────────────────────────────
+document.getElementById('TBlogo').addEventListener('click',()=>{
+  taps++;clearTimeout(tapT);
+  if(taps>=5){taps=0;openAdmin();}
+  else tapT=setTimeout(()=>taps=0,1100);
+});
+
+// ─────────────────────────────────────────
+// SUGGESTIONS
+// ─────────────────────────────────────────
+function sg(el){
+  document.getElementById('TI').value=el.querySelector('.sg-t').textContent;
+  send();
+}
+
+// ─────────────────────────────────────────
+// SEND MESSAGE
+// ─────────────────────────────────────────
+function send(){
+  const ti=document.getElementById('TI');
+  const txt=ti.value.trim();
+  if(!txt||busy)return;
+  ti.value='';ti.style.height='';
+  document.getElementById('WEL').style.display='none';
+  bubble(txt,'u');
+  hist.push({role:'user',content:txt});
+  sv('hist',hist);
+  trackMem(txt);
+  callAPI();
+}
+
+document.getElementById('TI').addEventListener('input',function(){
+  this.style.height='auto';
+  this.style.height=Math.min(this.scrollHeight,120)+'px';
+});
+document.getElementById('TI').addEventListener('keydown',function(e){
+  if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();send();}
+});
+
+// ─────────────────────────────────────────
+// API CALL
+// ─────────────────────────────────────────
+async function callAPI(){
+  busy=true;showBird();
+  const key=ld('key','');
+  const cfg=ld('cfg',{sys:DEF_SYS,temp:0.7,tokens:1024,model:DEF_MODEL});
+  const top=topTopics(4);
+  const sys=(cfg.sys||DEF_SYS)+(top.length?'\n\nUser often talks about: '+top.join(', '):'' );
+  const msgs=[{role:'system',content:sys},...hist.slice(-24)];
+  try{
+    const r=await fetch(GROQ,{
+      method:'POST',
+      headers:{'Content-Type':'application/json','Authorization':'Bearer '+key},
+      body:JSON.stringify({
+        model:cfg.model||DEF_MODEL,
+        messages:msgs,
+        temperature:typeof cfg.temp==='number'?cfg.temp:0.7,
+        max_tokens:cfg.tokens||1024
+      })
+    });
+    const d=await r.json();
+    hideBird();
+    if(d.choices&&d.choices[0]&&d.choices[0].message){
+      const rep=d.choices[0].message.content||'';
+      hist.push({role:'assistant',content:rep});
+      sv('hist',hist);
+      bubble(rep,'a');
+    } else {
+      bubble('Something slipped — '+(d.error&&d.error.message?d.error.message:'please try again.'),'a');
+    }
+  }catch(e){
+    hideBird();
+    bubble("Lost the connection for a second — I'm still here. Try again. 🌙",'a');
+  }
+  busy=false;
+}
+
+// ─────────────────────────────────────────
+// BUBBLE RENDERER
+// ─────────────────────────────────────────
+function bubble(text,role,sc=true){
+  const msgs=document.getElementById('MSG');
+  const row=document.createElement('div');
+  row.className='row '+role;
+  const b=document.createElement('div');
+  b.className=role==='u'?'bu':'ba';
+  if(role==='u'){
+    b.textContent=text;
+  } else {
+    b.innerHTML=renderMD(text);
+  }
+  row.appendChild(b);
+  msgs.appendChild(row);
+  if(sc)scrollEnd();
+}
+
+function renderMD(t){
+  // escape HTML first
+  let h=t.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  // code blocks (before other processing)
+  h=h.replace(/```[\w]*\n?([\s\S]*?)```/g,(_,c)=>'<pre><code>'+c.trim()+'</code></pre>');
+  // inline code
+  h=h.replace(/`([^`]+)`/g,'<code>$1</code>');
+  // headings
+  h=h.replace(/^### (.+)$/gm,'<h3>$1</h3>');
+  h=h.replace(/^## (.+)$/gm,'<h2>$1</h2>');
+  h=h.replace(/^# (.+)$/gm,'<h1>$1</h1>');
+  // bold + italic
+  h=h.replace(/\*\*\*(.+?)\*\*\*/g,'<strong><em>$1</em></strong>');
+  h=h.replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>');
+  h=h.replace(/\*(.+?)\*/g,'<em>$1</em>');
+  h=h.replace(/__(.+?)__/g,'<strong>$1</strong>');
+  // blockquote
+  h=h.replace(/^&gt; (.+)$/gm,'<blockquote>$1</blockquote>');
+  // hr
+  h=h.replace(/^---+$/gm,'<hr/>');
+  // lists
+  h=h.replace(/^\s*[-*•] (.+)$/gm,'<li>$1</li>');
+  h=h.replace(/^\d+\. (.+)$/gm,'<li>$1</li>');
+  h=h.replace(/(<li>[\s\S]*?<\/li>)/g,'<ul>$1</ul>');
+  // paragraphs
+  h=h.replace(/\n{2,}/g,'</p><p>');
+  h=h.replace(/\n/g,'<br/>');
+  h='<p>'+h+'</p>';
+  // clean up empty p tags
+  h=h.replace(/<p>\s*<\/p>/g,'');
+  return hlKW(h);
+}
+
+const KWS=['important','remember','key','note','warning','critical','essential','love','hope','trust','fear','anxiety','peace','strength','courage','healing','money','health','mind','body','soul','heart','life','future','focus','goal','dream','plan','simple','clear','understand','learn','grow','change','help','support','safe','always','never','must','truth','real','free','time','work','family','people','honest','kind','brave','hard','easy','right','wrong'];
+function hlKW(h){
+  KWS.forEach(k=>{h=h.replace(new RegExp('\\b('+k+')\\b','gi'),'<span class="kw">$1</span>');});
+  return h;
+}
+
+// ─────────────────────────────────────────
+// BIRD ANIMATION
+// ─────────────────────────────────────────
+function showBird(){
+  document.getElementById('BSV').classList.remove('fly');
+  document.getElementById('TR').classList.add('on');
+  scrollEnd();
+}
+function hideBird(){
+  document.getElementById('BSV').classList.add('fly');
+  setTimeout(()=>{
+    document.getElementById('TR').classList.remove('on');
+    document.getElementById('BSV').classList.remove('fly');
+  },680);
+}
+
+// ─────────────────────────────────────────
+// MEMORY
+// ─────────────────────────────────────────
+function trackMem(txt){
+  const stop=new Set(['that','this','with','from','have','about','your','they','what','when','will','just','been','some','also','into','more','then','than','them','were','like','said','each','which','their','there','would','could','should','dont','cant','isnt']);
+  (txt.toLowerCase().match(/\b\w{4,}\b/g)||[]).forEach(w=>{if(!stop.has(w))mem[w]=(mem[w]||0)+1;});
+  sv('mem',mem);renderMem();
+}
+function topTopics(n){return Object.entries(mem).sort((a,b)=>b[1]-a[1]).slice(0,n).map(e=>e[0]);}
+function renderMem(){
+  const t=topTopics(5);
+  document.getElementById('MEM').innerHTML=t.length?t.map(w=>`<div class="mc">💭 <b>${w}</b></div>`).join(''):'';
+}
+
+// ─────────────────────────────────────────
+// NEW CHAT
+// ─────────────────────────────────────────
+function newChat(){
+  if(hist.length&&!confirm('Start a new chat? This clears current conversation.'))return;
+  hist=[];sv('hist',[]);
+  document.getElementById('MSG').innerHTML='';
+  document.getElementById('WEL').style.display='flex';
+  scrollEnd();
+}
+
+// ─────────────────────────────────────────
+// SCROLL
+// ─────────────────────────────────────────
+function scrollEnd(){
+  const ca=document.getElementById('CA');
+  setTimeout(()=>ca.scrollTo({top:ca.scrollHeight,behavior:'smooth'}),60);
+}
+
+// ─────────────────────────────────────────
+// ADMIN
+// ─────────────────────────────────────────
+function openAdmin(){
+  loadAdmin();
+  document.getElementById('AK').value=ld('key','')||'';
+  document.getElementById('AO').classList.add('on');
+}
+function closeAdmin(){document.getElementById('AO').classList.remove('on');}
+
+function saveAdmin(){
+  const nk=document.getElementById('AK').value.trim();
+  if(nk&&nk.startsWith('gsk_'))sv('key',nk);
+  sv('cfg',{
+    sys:document.getElementById('ASY').value||DEF_SYS,
+    temp:parseFloat((parseInt(document.getElementById('AT').value)/10).toFixed(1)),
+    tokens:parseInt(document.getElementById('ATK').value),
+    model:document.getElementById('AMD').value
+  });
+  closeAdmin();
+  const b=document.getElementById('ASVB');
+  b.textContent='✓ Saved!';
+  setTimeout(()=>b.textContent='Save Everything',1400);
+}
+
+function loadAdmin(){
+  const c=ld('cfg',{sys:DEF_SYS,temp:0.7,tokens:1024,model:DEF_MODEL});
+  document.getElementById('ASY').value=c.sys||DEF_SYS;
+  const tv=Math.round((c.temp||.7)*10);
+  document.getElementById('AT').value=tv;
+  document.getElementById('ATV').textContent=(tv/10).toFixed(1);
+  document.getElementById('ATK').value=c.tokens||1024;
+  document.getElementById('ATKV').textContent=c.tokens||1024;
+  document.getElementById('AMD').value=c.model||DEF_MODEL;
+}
+
+function clearAll(){
+  if(!confirm('Clear all history and memory? Cannot be undone.'))return;
+  hist=[];mem={};
+  sv('hist',[]);sv('mem',{});
+  document.getElementById('MSG').innerHTML='';
+  document.getElementById('MEM').innerHTML='';
+  document.getElementById('WEL').style.display='flex';
+  closeAdmin();
+}
+</script>
+</body>
+</html>
